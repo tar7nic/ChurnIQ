@@ -1,0 +1,119 @@
+{
+  "shape": {
+    "rows": 6000,
+    "columns": 24
+  },
+  "dtypes": {
+    "customer_id": "str",
+    "gender": "str",
+    "senior_citizen": "int64",
+    "partner": "str",
+    "dependents": "str",
+    "tenure": "int64",
+    "phone_service": "str",
+    "multiple_lines": "str",
+    "internet_service": "str",
+    "online_security": "str",
+    "online_backup": "str",
+    "device_protection": "str",
+    "tech_support": "str",
+    "streaming_tv": "str",
+    "streaming_movies": "str",
+    "contract": "str",
+    "paperless_billing": "str",
+    "payment_method": "str",
+    "monthly_charges": "float64",
+    "total_charges": "float64",
+    "num_support_tickets": "int64",
+    "late_payments": "int64",
+    "satisfaction_score": "float64",
+    "churn": "str"
+  },
+  "null_counts": {
+    "total_charges": 55
+  },
+  "null_pct": {
+    "total_charges": 0.92
+  },
+  "duplicates": 0,
+  "class_distribution": {
+    "No": 4787,
+    "Yes": 1213
+  },
+  "class_imbalance_ratio": {
+    "No": "79.78%",
+    "Yes": "20.22%"
+  },
+  "summary_stats": {
+    "senior_citizen": {
+      "count": 6000.0,
+      "mean": 0.15,
+      "std": 0.36,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 0.0,
+      "75%": 0.0,
+      "max": 1.0
+    },
+    "tenure": {
+      "count": 6000.0,
+      "mean": 36.34,
+      "std": 20.7,
+      "min": 1.0,
+      "25%": 18.75,
+      "50%": 36.0,
+      "75%": 54.0,
+      "max": 72.0
+    },
+    "monthly_charges": {
+      "count": 6000.0,
+      "mean": 68.57,
+      "std": 28.26,
+      "min": 18.0,
+      "25%": 44.15,
+      "50%": 69.97,
+      "75%": 90.6,
+      "max": 120.0
+    },
+    "total_charges": {
+      "count": 5945.0,
+      "mean": 2498.32,
+      "std": 1850.9,
+      "min": 16.75,
+      "25%": 989.89,
+      "50%": 2102.28,
+      "75%": 3657.77,
+      "max": 9198.31
+    },
+    "num_support_tickets": {
+      "count": 6000.0,
+      "mean": 2.14,
+      "std": 1.62,
+      "min": 0.0,
+      "25%": 1.0,
+      "50%": 2.0,
+      "75%": 3.0,
+      "max": 12.0
+    },
+    "late_payments": {
+      "count": 6000.0,
+      "mean": 1.24,
+      "std": 1.35,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 1.0,
+      "75%": 2.0,
+      "max": 9.0
+    },
+    "satisfaction_score": {
+      "count": 6000.0,
+      "mean": 4.38,
+      "std": 0.53,
+      "min": 1.9,
+      "25%": 4.0,
+      "50%": 4.4,
+      "75%": 4.8,
+      "max": 5.0
+    }
+  }
+}

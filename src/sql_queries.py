@@ -14,10 +14,13 @@ Usage:
     python src/sql_queries.py
 """
 
+import sys
 import sqlite3
 import pandas as pd
 import numpy as np
 from pathlib import Path
+
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DATA_PATH = PROJECT_ROOT / "data" / "raw" / "churn_raw.csv"
@@ -36,7 +39,7 @@ def get_connection(df: pd.DataFrame) -> sqlite3.Connection:
 def run_query(conn: sqlite3.Connection, query: str, title: str) -> pd.DataFrame:
     """Execute a query, print it, and display results."""
     print(f"\n{'─' * 60}")
-    print(f"  📊 {title}")
+    print(f"   {title}")
     print(f"{'─' * 60}")
     print(f"  SQL:\n{query}")
     result = pd.read_sql_query(query, conn)
@@ -182,13 +185,13 @@ def ab_test_framework(conn: sqlite3.Connection) -> None:
         - Treatment group B: Free month + price lock
     
     Metrics tracked:
-        - Conversion rate (month-to-month → annual)
+        - Conversion rate (month-to-month -> annual)
         - Churn rate post-intervention (30/60/90 day)
         - Revenue impact per customer
         - Statistical significance (chi-squared test)
     """
     print("\n" + "=" * 60)
-    print("  🧪 A/B TEST FRAMEWORK — Retention Offer Analysis")
+    print("   A/B TEST FRAMEWORK — Retention Offer Analysis")
     print("=" * 60)
 
     # Simulate assigning at-risk customers to A/B groups
@@ -221,7 +224,7 @@ def ab_test_framework(conn: sqlite3.Connection) -> None:
         "Treatment_B (Free Month)": 0.18,
     }
 
-    print("\n  📈 Simulated Conversion Results (would be measured post-rollout):")
+    print("\n   Simulated Conversion Results (would be measured post-rollout):")
     print(f"  {'Group':<35} {'Customers':>10} {'Conv. Rate':>12} {'Retained':>10}")
     print(f"  {'-'*70}")
     for group, rate in conversion_rates.items():
@@ -253,7 +256,7 @@ def model_drift_monitoring(conn: sqlite3.Connection) -> None:
         - Alert when PSI (Population Stability Index) > 0.2
     """
     print("\n" + "=" * 60)
-    print("  📡 MODEL DRIFT MONITORING FRAMEWORK")
+    print("   MODEL DRIFT MONITORING FRAMEWORK")
     print("=" * 60)
 
     # Simulate two time windows of data
@@ -288,11 +291,11 @@ def model_drift_monitoring(conn: sqlite3.Connection) -> None:
         psi = np.sum((curr_pct - base_pct) * np.log(curr_pct / base_pct))
 
         if psi < 0.1:
-            status = "✅ Stable"
+            status = "[OK] Stable"
         elif psi < 0.2:
-            status = "⚠️  Warning"
+            status = "[!]  Warning"
         else:
-            status = "🚨 Alert"
+            status = "[!!] Alert"
 
         print(f"  {feature:<30} {psi:>8.4f} {status:>10}")
 
@@ -340,7 +343,7 @@ def main():
     model_drift_monitoring(conn)
 
     conn.close()
-    print("\n[✓] SQL analysis complete.\n")
+    print("\n[OK] SQL analysis complete.\n")
 
 
 if __name__ == "__main__":

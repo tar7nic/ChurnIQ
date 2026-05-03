@@ -12,6 +12,7 @@ Outputs:
     outputs/figures/*.png
 """
 
+import sys
 import warnings
 import numpy as np
 import pandas as pd
@@ -21,6 +22,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
 from pathlib import Path
+
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 warnings.filterwarnings("ignore")
 
@@ -71,7 +74,7 @@ def save_fig(name: str) -> None:
     path = FIGURES_DIR / f"{name}.png"
     plt.savefig(path, dpi=150, bbox_inches="tight", facecolor=PALETTE["bg"])
     plt.close()
-    print(f"  [✓] Saved: {path.name}")
+    print(f"  [OK] Saved: {path.name}")
 
 
 def load_data() -> pd.DataFrame:
@@ -136,7 +139,7 @@ def plot_churn_distribution(df: pd.DataFrame) -> None:
     save_fig("01_churn_distribution")
 
     churn_pct = pct.get("Yes", 0)
-    print(f"  💡 Business Insight: {churn_pct:.1f}% of customers have churned — this exceeds the "
+    print(f"   Business Insight: {churn_pct:.1f}% of customers have churned — this exceeds the "
           f"typical industry benchmark of ~15%, indicating a significant retention challenge. "
           f"A targeted intervention strategy could recover substantial revenue.")
 
@@ -182,7 +185,7 @@ def plot_churn_by_contract(df: pd.DataFrame) -> None:
 
     fig.tight_layout()
     save_fig("02_churn_by_contract")
-    print("  💡 Business Insight: Month-to-month customers churn at a dramatically higher rate "
+    print("   Business Insight: Month-to-month customers churn at a dramatically higher rate "
           "than annual or two-year contract holders. Migrating customers from monthly to annual "
           "contracts — even with modest discounts — could be the single highest-impact retention lever.")
 
@@ -224,7 +227,7 @@ def plot_churn_by_tenure(df: pd.DataFrame) -> None:
 
     fig.tight_layout()
     save_fig("03_churn_by_tenure")
-    print("  💡 Business Insight: Newly acquired customers (0-12 months) churn at significantly "
+    print("   Business Insight: Newly acquired customers (0-12 months) churn at significantly "
           "higher rates. The first year is the critical 'loyalty window'. Onboarding programs, "
           "early engagement incentives, and proactive support during the first 6 months can "
           "dramatically reduce early-stage churn.")
@@ -274,7 +277,7 @@ def plot_churn_vs_charges(df: pd.DataFrame) -> None:
 
     fig.tight_layout()
     save_fig("04_churn_vs_monthly_charges")
-    print("  💡 Business Insight: Churned customers tend to have higher monthly charges, "
+    print("   Business Insight: Churned customers tend to have higher monthly charges, "
           "suggesting price sensitivity. Introducing tiered loyalty discounts, bundle pricing, "
           "or a 'price-lock guarantee' for high-charge customers may significantly improve retention.")
 
@@ -316,7 +319,7 @@ def plot_churn_vs_tickets(df: pd.DataFrame) -> None:
 
     fig.tight_layout()
     save_fig("05_churn_vs_support_tickets")
-    print("  💡 Business Insight: Churn rate escalates sharply with support ticket volume. "
+    print("   Business Insight: Churn rate escalates sharply with support ticket volume. "
           "Customers filing 4+ tickets are extremely high-risk. A proactive support escalation "
           "program — triggering personal outreach after the 3rd ticket — could intercept these "
           "customers before they decide to leave.")
@@ -349,7 +352,7 @@ def plot_correlation_heatmap(df: pd.DataFrame) -> None:
     ax.tick_params(axis="y", rotation=0)
     fig.tight_layout()
     save_fig("06_correlation_heatmap")
-    print("  💡 Business Insight: The correlation matrix reveals that churn is most strongly "
+    print("   Business Insight: The correlation matrix reveals that churn is most strongly "
           "associated with late payments, support tickets, satisfaction score, and contract type. "
           "Monthly charges and tenure show moderate correlations. These top drivers should be "
           "prioritized in the predictive model and retention strategy.")
@@ -381,7 +384,7 @@ def plot_churn_by_payment(df: pd.DataFrame) -> None:
     ax.grid(axis="x", alpha=0.3)
     fig.tight_layout()
     save_fig("07_churn_by_payment_method")
-    print("  💡 Business Insight: Electronic check users exhibit the highest churn rate. "
+    print("   Business Insight: Electronic check users exhibit the highest churn rate. "
           "This payment method correlates with lower commitment — customers using it are "
           "less 'locked in'. Incentivizing migration to automatic bank transfer or credit "
           "card payments (e.g., 5% discount for auto-pay) could reduce churn in this segment.")
@@ -431,8 +434,8 @@ def plot_churn_by_satisfaction(df: pd.DataFrame) -> None:
     fig.tight_layout()
     save_fig("08_churn_by_satisfaction")
     df.drop(columns=["sat_bin"], inplace=True, errors="ignore")
-    print("  💡 Business Insight: Customers with satisfaction scores of 1-2 churn at a rate "
-          "5-8× higher than highly satisfied customers (4-5). Implementing NPS/CSAT surveys "
+    print("   Business Insight: Customers with satisfaction scores of 1-2 churn at a rate "
+          "5-8x higher than highly satisfied customers (4-5). Implementing NPS/CSAT surveys "
           "immediately after service interactions and triggering 'save' workflows for scores "
           "below 3 represents a high-leverage retention opportunity.")
 
@@ -457,7 +460,7 @@ def plot_internet_service(df: pd.DataFrame) -> None:
     ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
     save_fig("09_churn_by_internet_service")
-    print("  💡 Business Insight: Fiber optic customers show the highest churn despite premium pricing. "
+    print("   Business Insight: Fiber optic customers show the highest churn despite premium pricing. "
           "This suggests a product-quality gap — customers expect high performance for high prices. "
           "Service reliability improvements and proactive SLA communications are critical.")
 
@@ -493,7 +496,7 @@ def plot_demographics(df: pd.DataFrame) -> None:
 
     fig.tight_layout()
     save_fig("10_churn_by_demographics")
-    print("  💡 Business Insight: Senior citizens churn at higher rates, possibly due to "
+    print("   Business Insight: Senior citizens churn at higher rates, possibly due to "
           "technology complexity or cost concerns. Dedicated senior support plans and simplified "
           "billing can address this segment's specific needs.")
 
@@ -507,7 +510,7 @@ def run_eda():
     print("=" * 60)
 
     df = load_data()
-    print(f"[✓] Loaded: {df.shape[0]:,} rows × {df.shape[1]} columns")
+    print(f"[OK] Loaded: {df.shape[0]:,} rows x {df.shape[1]} columns")
 
     plot_churn_distribution(df)
     plot_churn_by_contract(df)
@@ -520,7 +523,7 @@ def run_eda():
     plot_internet_service(df)
     plot_demographics(df)
 
-    print(f"\n[✓] All EDA figures saved to: {FIGURES_DIR}")
+    print(f"\n[OK] All EDA figures saved to: {FIGURES_DIR}")
     print("=" * 60)
 
 

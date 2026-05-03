@@ -19,6 +19,7 @@ Outputs:
     outputs/metrics_report.json
 """
 
+import sys
 import warnings
 import json
 import joblib
@@ -34,6 +35,8 @@ from sklearn.metrics import (
     roc_auc_score, average_precision_score, confusion_matrix,
     classification_report
 )
+
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 try:
     import shap
@@ -81,7 +84,7 @@ def save_fig(name: str) -> None:
     path = FIGURES_DIR / f"{name}.png"
     plt.savefig(path, dpi=150, bbox_inches="tight", facecolor=PALETTE["bg"])
     plt.close()
-    print(f"  [✓] Saved: {path.name}")
+    print(f"  [OK] Saved: {path.name}")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -100,7 +103,7 @@ def load_artifacts():
     with open(OUTPUTS_DIR / "metrics_summary.json") as f:
         metrics_summary = json.load(f)
 
-    print(f"[✓] Loaded {len(all_models)} models | {len(feature_names)} features")
+    print(f"[OK] Loaded {len(all_models)} models | {len(feature_names)} features")
     return X_train, X_test, y_train, y_test, feature_names, best_model, all_models, metrics_summary
 
 
@@ -128,7 +131,7 @@ def print_metrics_table(metrics_summary: dict) -> pd.DataFrame:
     print("=" * 90)
     print(df.to_string())
     print("=" * 90)
-    print(f"\n★ Best Model: {metrics_summary['best_model']}")
+    print(f"\n* Best Model: {metrics_summary['best_model']}")
     return df
 
 
@@ -197,20 +200,20 @@ def plot_feature_importance(
 
     # Business label mapping for key features
     business_labels = {
-        "contract Month-to-month": "📋 Month-to-month Contract",
-        "contract Two year": "📋 Two Year Contract",
-        "contract One year": "📋 One Year Contract",
-        "tenure": "📅 Customer Tenure",
-        "monthly charges": "💰 Monthly Charges",
-        "total charges": "💰 Total Charges",
-        "satisfaction score": "⭐ Satisfaction Score",
-        "num support tickets": "🎫 Support Tickets",
-        "late payments": "⚠️ Late Payments",
-        "late payment risk score": "🚨 Late Payment Risk",
-        "avg charge per tenure": "💳 Avg Charge/Tenure",
-        "internet service Fiber optic": "📡 Fiber Optic Service",
-        "payment method Electronic check": "💳 Electronic Check",
-        "engagement score": "🔗 Engagement Score",
+        "contract Month-to-month": " Month-to-month Contract",
+        "contract Two year": " Two Year Contract",
+        "contract One year": " One Year Contract",
+        "tenure": " Customer Tenure",
+        "monthly charges": " Monthly Charges",
+        "total charges": " Total Charges",
+        "satisfaction score": " Satisfaction Score",
+        "num support tickets": " Support Tickets",
+        "late payments": "[!] Late Payments",
+        "late payment risk score": "[!!] Late Payment Risk",
+        "avg charge per tenure": " Avg Charge/Tenure",
+        "internet service Fiber optic": " Fiber Optic Service",
+        "payment method Electronic check": " Electronic Check",
+        "engagement score": " Engagement Score",
     }
 
     labeled = [business_labels.get(f.lower(), f.title()) for f in top_features]
@@ -251,7 +254,7 @@ def plot_shap_analysis(best_model, X_train: np.ndarray, X_test: np.ndarray,
     if not SHAP_AVAILABLE:
         return
 
-    print("[→] Generating SHAP plots ...")
+    print("[->] Generating SHAP plots ...")
 
     # Sample for speed
     sample_size = min(500, X_train.shape[0])
@@ -298,7 +301,7 @@ def plot_shap_analysis(best_model, X_train: np.ndarray, X_test: np.ndarray,
         plt.title("SHAP Mean |SHAP Value| — Feature Importance", fontsize=14, fontweight="bold")
         save_fig("17_shap_bar")
 
-        print("  [✓] SHAP analysis complete.")
+        print("  [OK] SHAP analysis complete.")
 
     except Exception as e:
         print(f"  [!] SHAP plot error: {e}")
@@ -310,14 +313,14 @@ def plot_shap_analysis(best_model, X_train: np.ndarray, X_test: np.ndarray,
 def print_business_recommendations() -> None:
     """Print actionable business recommendations based on model insights."""
     print("\n" + "=" * 70)
-    print("  📊 BUSINESS RECOMMENDATIONS — CUSTOMER RETENTION STRATEGY")
+    print("   BUSINESS RECOMMENDATIONS — CUSTOMER RETENTION STRATEGY")
     print("=" * 70)
 
     recommendations = [
         {
             "segment": "Month-to-Month Contract Customers",
-            "risk": "🔴 High",
-            "insight": "Churn rate 3-4× higher than annual contract holders",
+            "risk": " High",
+            "insight": "Churn rate 3-4x higher than annual contract holders",
             "actions": [
                 "Offer 15-20% annual plan discount with 'price lock guarantee'",
                 "Trigger retention call within 5 days of 11th-month anniversary",
@@ -326,8 +329,8 @@ def print_business_recommendations() -> None:
         },
         {
             "segment": "Low Satisfaction + High Ticket Customers",
-            "risk": "🔴 High",
-            "insight": "Satisfaction < 3 AND 4+ tickets → churn probability > 70%",
+            "risk": " High",
+            "insight": "Satisfaction < 3 AND 4+ tickets -> churn probability > 70%",
             "actions": [
                 "Auto-escalate to senior support after 3rd ticket",
                 "Proactive callback within 24h for satisfaction scores below 3",
@@ -336,7 +339,7 @@ def print_business_recommendations() -> None:
         },
         {
             "segment": "High Monthly Charge Customers",
-            "risk": "🟠 Medium-High",
+            "risk": " Medium-High",
             "insight": "Price sensitivity increases with monthly charges above $80",
             "actions": [
                 "Personalized pricing review offer for 80th+ percentile customers",
@@ -346,7 +349,7 @@ def print_business_recommendations() -> None:
         },
         {
             "segment": "Fiber Optic Service Customers",
-            "risk": "🟠 Medium-High",
+            "risk": " Medium-High",
             "insight": "Premium price expectation creates a higher dissatisfaction threshold",
             "actions": [
                 "Monthly performance report email proving uptime / speed delivered",
@@ -356,7 +359,7 @@ def print_business_recommendations() -> None:
         },
         {
             "segment": "Electronic Check Payment Users",
-            "risk": "🟡 Medium",
+            "risk": " Medium",
             "insight": "Manual payment method correlates with lower stickiness",
             "actions": [
                 "Incentivize autopay enrollment: 5% discount + late fee waiver",
@@ -366,7 +369,7 @@ def print_business_recommendations() -> None:
         },
         {
             "segment": "New Customers (0-12 months tenure)",
-            "risk": "🟠 Medium-High",
+            "risk": " Medium-High",
             "insight": "First-year customers are in the critical loyalty window",
             "actions": [
                 "60-day post-sign-up wellness check call from account manager",
@@ -376,7 +379,7 @@ def print_business_recommendations() -> None:
         },
         {
             "segment": "Senior Citizens Without Partners",
-            "risk": "🟡 Medium",
+            "risk": " Medium",
             "insight": "Complexity + cost sensitivity drives higher churn rate",
             "actions": [
                 "Dedicated senior support team with simplified billing",
@@ -388,8 +391,8 @@ def print_business_recommendations() -> None:
 
     for i, rec in enumerate(recommendations, 1):
         print(f"\n{i}. {rec['segment']} — Risk: {rec['risk']}")
-        print(f"   📈 Insight: {rec['insight']}")
-        print(f"   ✅ Recommended Actions:")
+        print(f"    Insight: {rec['insight']}")
+        print(f"   [OK] Recommended Actions:")
         for action in rec["actions"]:
             print(f"      • {action}")
 
@@ -404,7 +407,7 @@ def print_resume_achievements(metrics_summary: dict) -> None:
     best = metrics_summary["results"][best_name]
 
     print("\n" + "=" * 70)
-    print("  🏆 RESUME-READY ACHIEVEMENTS")
+    print("   RESUME-READY ACHIEVEMENTS")
     print("=" * 70)
 
     achievements = [
@@ -476,7 +479,7 @@ def save_full_report(metrics_summary: dict) -> None:
 
     with open(OUTPUTS_DIR / "metrics_report.json", "w") as f:
         json.dump(report, f, indent=2)
-    print("\n[✓] Full report saved to outputs/metrics_report.json")
+    print("\n[OK] Full report saved to outputs/metrics_report.json")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -496,7 +499,7 @@ def main():
     print_metrics_table(metrics_summary)
 
     # Plots
-    print("\n[→] Generating evaluation plots ...")
+    print("\n[->] Generating evaluation plots ...")
     plot_confusion_matrices(all_models, X_test, y_test)
     plot_feature_importance(best_model, feature_names, metrics_summary["best_model"])
     plot_shap_analysis(best_model, X_train, X_test, feature_names)
@@ -510,7 +513,7 @@ def main():
     # Save report
     save_full_report(metrics_summary)
 
-    print("\n[✓] Evaluation pipeline complete.\n")
+    print("\n[OK] Evaluation pipeline complete.\n")
 
 
 if __name__ == "__main__":

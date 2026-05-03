@@ -22,6 +22,7 @@ Outputs:
 """
 
 import os
+import sys
 import json
 import warnings
 import joblib
@@ -31,6 +32,8 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.impute import SimpleImputer
+
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 warnings.filterwarnings("ignore")
 
@@ -43,6 +46,7 @@ PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
 RANDOM_SEED = 42
 
+
 # ─────────────────────────────────────────────────────────────
 # 1. Load Data
 # ─────────────────────────────────────────────────────────────
@@ -54,7 +58,7 @@ def load_raw_data(path: Path = RAW_DATA_PATH) -> pd.DataFrame:
             "Run 'python src/data_generator.py' first."
         )
     df = pd.read_csv(path)
-    print(f"[✓] Loaded raw data: {df.shape[0]} rows × {df.shape[1]} columns")
+    print(f"[OK] Loaded raw data: {df.shape[0]} rows x {df.shape[1]} columns")
     return df
 
 
@@ -62,14 +66,7 @@ def load_raw_data(path: Path = RAW_DATA_PATH) -> pd.DataFrame:
 # 2. Data Quality Report
 # ─────────────────────────────────────────────────────────────
 def data_quality_report(df: pd.DataFrame) -> dict:
-    """
-    Generate a comprehensive data quality report.
-
-    Returns
-    -------
-    dict with keys: shape, dtypes, null_counts, null_pct, duplicates,
-                    class_distribution, summary_stats
-    """
+    """Generate a comprehensive data quality report."""
     report = {}
 
     report["shape"] = {"rows": df.shape[0], "columns": df.shape[1]}
@@ -95,7 +92,7 @@ def data_quality_report(df: pd.DataFrame) -> dict:
     print("\n" + "=" * 60)
     print("  DATA QUALITY REPORT")
     print("=" * 60)
-    print(f"  Shape          : {report['shape']['rows']} rows × {report['shape']['columns']} cols")
+    print(f"  Shape          : {report['shape']['rows']} rows x {report['shape']['columns']} cols")
     print(f"  Duplicates     : {report['duplicates']}")
     print(f"  Null columns   : {list(report['null_counts'].keys())}")
     print(f"  Class balance  : {report['class_imbalance_ratio']}")
@@ -111,9 +108,9 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Perform data cleaning:
       - Remove duplicates
-      - Fix dtypes (total_charges → float)
+      - Fix dtypes (total_charges -> float)
       - Impute missing values (median for numeric, mode for categorical)
-      - Cap outliers via IQR method on numeric columns
+      - Cap outliers via percentile clipping on numeric columns
     """
     df = df.copy()
 
@@ -121,7 +118,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     n_dups = df.duplicated().sum()
     df.drop_duplicates(inplace=True)
     if n_dups:
-        print(f"[✓] Dropped {n_dups} duplicate rows.")
+        print(f"[OK] Dropped {n_dups} duplicate rows.")
 
     # 3b. Drop customer_id (identifier, not a feature)
     if "customer_id" in df.columns:
@@ -132,39 +129,41 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
     # 3d. Impute missing numeric values with median
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    numeric_cols = [c for c in numeric_cols if c != "senior_citizen"]  # binary flag
-
     for col in numeric_cols:
         if df[col].isnull().any():
             median_val = df[col].median()
-            df[col].fillna(median_val, inplace=True)
-            print(f"[✓] Imputed '{col}' missing values with median ({median_val:.2f}).")
+            df[col] = df[col].fillna(median_val)
+            print(f"[OK] Imputed '{col}' missing values with median ({median_val:.2f}).")
 
     # 3e. Impute missing categorical values with mode
     cat_cols = df.select_dtypes(include="object").columns.tolist()
     cat_cols = [c for c in cat_cols if c != "churn"]
-
     for col in cat_cols:
         if df[col].isnull().any():
             mode_val = df[col].mode()[0]
-            df[col].fillna(mode_val, inplace=True)
-            print(f"[✓] Imputed '{col}' missing values with mode ('{mode_val}').")
+            df[col] = df[col].fillna(mode_val)
+            print(f"[OK] Imputed '{col}' missing values with mode ('{mode_val}').")
 
-    # 3f. Outlier capping via IQR (Winsorization) on key numeric cols
+    # 3f. Outlier capping using 5th/95th percentiles (avoids lower > upper issues)
     outlier_cols = ["monthly_charges", "total_charges", "num_support_tickets", "late_payments"]
     for col in outlier_cols:
         if col in df.columns:
-            Q1 = df[col].quantile(0.01)
-            Q3 = df[col].quantile(0.99)
-            IQR = Q3 - Q1
-            lower = Q1 - 1.5 * IQR
-            upper = Q3 + 1.5 * IQR
-            n_capped = ((df[col] < lower) | (df[col] > upper)).sum()
-            df[col] = df[col].clip(lower=lower, upper=upper)
-            if n_capped:
-                print(f"[✓] Capped {n_capped} outliers in '{col}' [{lower:.2f}, {upper:.2f}].")
+            lower = df[col].quantile(0.05)
+            upper = df[col].quantile(0.95)
+            if pd.notna(lower) and pd.notna(upper) and lower < upper:
+                n_capped = ((df[col] < lower) | (df[col] > upper)).sum()
+                df[col] = df[col].clip(lower=lower, upper=upper)
+                if n_capped:
+                    print(f"[OK] Capped {n_capped} outliers in '{col}' [{lower:.2f}, {upper:.2f}].")
 
-    print(f"[✓] Cleaning complete. Shape: {df.shape}")
+    # 3g. Final safety pass — fill any remaining NaNs in numeric cols
+    for col in df.select_dtypes(include=np.number).columns:
+        if df[col].isnull().any():
+            fill_val = df[col].median()
+            fill_val = 0.0 if pd.isna(fill_val) else fill_val
+            df[col] = df[col].fillna(fill_val)
+
+    print(f"[OK] Cleaning complete. Shape: {df.shape}")
     return df
 
 
@@ -174,7 +173,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Create business-meaningful derived features:
-      - tenure_group            : binned tenure for segmentation
+      - tenure_group            : ordinal int (0-3) — safer than pd.Categorical
       - avg_charge_per_tenure   : cost efficiency proxy
       - late_payment_risk_score : normalized composite risk
       - engagement_score        : count of active add-on services
@@ -182,12 +181,18 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
 
-    # 4a. Tenure group (months → category)
-    bins = [0, 12, 24, 48, 72]
-    labels = ["0-12 months", "13-24 months", "25-48 months", "49-72 months"]
-    df["tenure_group"] = pd.cut(
-        df["tenure"], bins=bins, labels=labels, include_lowest=True
-    )
+    # 4a. Tenure group as ordinal integer (avoids pd.Categorical NaN edge cases)
+    def tenure_to_group(t):
+        if t <= 12:
+            return 0
+        elif t <= 24:
+            return 1
+        elif t <= 48:
+            return 2
+        else:
+            return 3
+
+    df["tenure_group"] = df["tenure"].apply(tenure_to_group)
 
     # 4b. Average charge per tenure month (avoid divide-by-zero)
     df["avg_charge_per_tenure"] = np.where(
@@ -209,17 +214,19 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         "online_security", "online_backup", "device_protection",
         "tech_support", "streaming_tv", "streaming_movies",
     ]
-    engagement = pd.DataFrame()
+    engagement_parts = []
     for col in addon_cols:
-        engagement[col] = (df[col] == "Yes").astype(int)
-    df["engagement_score"] = engagement.sum(axis=1)
+        if col in df.columns:
+            engagement_parts.append((df[col] == "Yes").astype(int))
+    df["engagement_score"] = sum(engagement_parts) if engagement_parts else 0
 
     # 4e. High-value customer flag
     q75 = df["monthly_charges"].quantile(0.75)
     df["high_value_customer"] = (df["monthly_charges"] >= q75).astype(int)
 
-    print(f"[✓] Feature engineering complete. New columns: tenure_group, avg_charge_per_tenure,")
-    print(f"     late_payment_risk_score, engagement_score, high_value_customer")
+    print(f"[OK] Feature engineering complete.")
+    print(f"     Added: tenure_group, avg_charge_per_tenure, late_payment_risk_score,")
+    print(f"            engagement_score, high_value_customer")
     return df
 
 
@@ -236,35 +243,27 @@ def encode_and_scale(
     Encode categorical variables and scale numeric features.
 
     Strategy:
-      - Binary yes/no columns → LabelEncoder (0/1)
-      - Multi-class categoricals → pd.get_dummies (one-hot)
-      - Numeric features → StandardScaler
-
-    Parameters
-    ----------
-    df        : Cleaned + engineered DataFrame (without 'churn')
-    fit       : If True, fit new scaler/encoder. If False, use provided ones.
-    scaler    : Pre-fitted StandardScaler (used when fit=False)
-    cat_encoder : Dict of pre-fitted LabelEncoders (used when fit=False)
+      - Binary yes/no columns  -> LabelEncoder (0/1)
+      - Multi-class categoricals -> pd.get_dummies (one-hot, cast to int)
+      - All columns cast to float before scaling
+      - Numeric features -> StandardScaler
+      - Two-stage NaN guard: before AND after scaling
 
     Returns
     -------
-    X_encoded : np.ndarray of encoded + scaled features
-    feature_names : list of feature column names
-    scaler    : fitted StandardScaler
-    cat_encoder : dict of fitted LabelEncoders
+    X_encoded    : np.ndarray — encoded + scaled features (guaranteed NaN-free)
+    feature_names: list of feature column names
+    target       : np.ndarray of 0/1 churn labels (or None)
+    scaler       : fitted StandardScaler
+    cat_encoder  : dict of fitted LabelEncoders + column metadata
     """
     df = df.copy()
 
-    # Encode target separately
+    # ── Separate target ────────────────────────────────────────
     target = None
     if "churn" in df.columns:
-        target = (df["churn"] == "Yes").astype(int).values
+        target = (df["churn"].astype(str).str.strip().str.lower() == "yes").astype(int).values
         df.drop(columns=["churn"], inplace=True)
-
-    # Drop tenure_group (ordinal — we use the numeric tenure directly)
-    if "tenure_group" in df.columns:
-        df.drop(columns=["tenure_group"], inplace=True)
 
     # ── Binary yes/no columns ─────────────────────────────────
     binary_yes_no = [
@@ -272,6 +271,7 @@ def encode_and_scale(
     ]
     if fit:
         cat_encoder = {}
+
     for col in binary_yes_no:
         if col in df.columns:
             if fit:
@@ -281,11 +281,13 @@ def encode_and_scale(
             else:
                 le = cat_encoder.get(col)
                 if le:
-                    df[col] = le.transform(df[col].astype(str))
+                    known = set(le.classes_)
+                    df[col] = df[col].astype(str).apply(
+                        lambda x: x if x in known else le.classes_[0]
+                    )
+                    df[col] = le.transform(df[col])
 
-    # ── Binary senior_citizen — already 0/1 ───────────────────
-
-    # ── Multi-value categoricals → one-hot ────────────────────
+    # ── Multi-value categoricals -> one-hot ────────────────────
     ohe_cols = [
         "gender", "multiple_lines", "internet_service",
         "online_security", "online_backup", "device_protection",
@@ -296,13 +298,15 @@ def encode_and_scale(
 
     if fit:
         df_encoded = pd.get_dummies(df, columns=ohe_cols, drop_first=False)
-        cat_encoder["ohe_columns"] = [
-            c for c in df_encoded.columns if c not in df.columns or c in ohe_cols
-        ]
+        # Cast bool dummy columns to int immediately
+        bool_cols = df_encoded.select_dtypes(include="bool").columns
+        df_encoded[bool_cols] = df_encoded[bool_cols].astype(int)
         cat_encoder["final_columns"] = df_encoded.columns.tolist()
     else:
         df_encoded = pd.get_dummies(df, columns=ohe_cols, drop_first=False)
-        # Align columns to training set
+        bool_cols = df_encoded.select_dtypes(include="bool").columns
+        df_encoded[bool_cols] = df_encoded[bool_cols].astype(int)
+        # Align to training columns — add missing cols as 0, drop extra cols
         final_columns = cat_encoder.get("final_columns", df_encoded.columns.tolist())
         for col in final_columns:
             if col not in df_encoded.columns:
@@ -311,16 +315,33 @@ def encode_and_scale(
 
     feature_names = df_encoded.columns.tolist()
 
-    # ── Scale numeric columns ─────────────────────────────────
-    num_cols = df_encoded.select_dtypes(include=np.number).columns.tolist()
+    # ── Cast everything to float ───────────────────────────────
+    df_encoded = df_encoded.astype(float)
+
+    # ── NaN guard BEFORE scaling ───────────────────────────────
+    if df_encoded.isnull().any().any():
+        nan_cols = df_encoded.columns[df_encoded.isnull().any()].tolist()
+        print(f"[WARN] NaNs found before scaling in columns: {nan_cols}")
+        print(f"       Imputing with column median...")
+        for col in nan_cols:
+            median_val = df_encoded[col].median()
+            median_val = 0.0 if pd.isna(median_val) else median_val
+            df_encoded[col] = df_encoded[col].fillna(median_val)
+
+    # ── Scale ─────────────────────────────────────────────────
     if fit:
         scaler = StandardScaler()
-        df_encoded[num_cols] = scaler.fit_transform(df_encoded[num_cols].astype(float))
+        scaled_values = scaler.fit_transform(df_encoded.values)
     else:
-        df_encoded[num_cols] = scaler.transform(df_encoded[num_cols].astype(float))
+        scaled_values = scaler.transform(df_encoded.values)
 
-    X = df_encoded.values
-    return X, feature_names, target, scaler, cat_encoder
+    # ── NaN guard AFTER scaling ────────────────────────────────
+    nan_count = np.isnan(scaled_values).sum()
+    if nan_count > 0:
+        print(f"[WARN] {nan_count} NaNs detected after scaling — replacing with 0.0")
+        scaled_values = np.nan_to_num(scaled_values, nan=0.0)
+
+    return scaled_values, feature_names, target, scaler, cat_encoder
 
 
 # ─────────────────────────────────────────────────────────────
@@ -336,12 +357,8 @@ def stratified_split(
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=seed, stratify=y
     )
-    print(
-        f"[✓] Train: {X_train.shape[0]} rows | Test: {X_test.shape[0]} rows"
-    )
-    print(
-        f"    Train churn rate: {y_train.mean():.2%} | Test churn rate: {y_test.mean():.2%}"
-    )
+    print(f"[OK] Train: {X_train.shape[0]} rows | Test: {X_test.shape[0]} rows")
+    print(f"     Train churn rate: {y_train.mean():.2%} | Test churn rate: {y_test.mean():.2%}")
     return X_train, X_test, y_train, y_test
 
 
@@ -377,47 +394,41 @@ def save_processed_data(
     with open(OUTPUTS_DIR / "data_quality_report.json", "w") as f:
         json.dump(report, f, indent=2, default=str)
 
-    print("\n[✓] Saved processed splits to data/processed/")
-    print("[✓] Saved scaler.pkl, encoder.pkl, feature_names.pkl to outputs/")
+    print("\n[OK] Saved processed splits  -> data/processed/")
+    print("[OK] Saved scaler.pkl, encoder.pkl, feature_names.pkl -> outputs/")
+
+    # ── Sanity check: verify no NaNs in saved CSVs ────────────
+    print("\n[->] Running NaN sanity check on saved files...")
+    for fname in ["X_train.csv", "X_test.csv"]:
+        check = pd.read_csv(PROCESSED_DIR / fname)
+        nan_count = check.isnull().sum().sum()
+        if nan_count > 0:
+            print(f"[ERROR] {fname} contains {nan_count} NaN values — investigate!")
+        else:
+            print(f"[OK] {fname} NaN check passed. Shape: {check.shape}")
 
 
 # ─────────────────────────────────────────────────────────────
 # Main Pipeline
 # ─────────────────────────────────────────────────────────────
 def run_preprocessing_pipeline() -> tuple:
-    """
-    Execute the full preprocessing pipeline end-to-end.
-
-    Returns
-    -------
-    X_train, X_test, y_train, y_test, feature_names
-    """
+    """Execute the full preprocessing pipeline end-to-end."""
     print("\n" + "=" * 60)
     print("  PREPROCESSING PIPELINE")
     print("=" * 60)
 
-    # Step 1: Load
-    df_raw = load_raw_data()
-
-    # Step 2: Quality report
-    report = data_quality_report(df_raw)
-
-    # Step 3: Clean
-    df_clean = clean_data(df_raw)
-
-    # Step 4: Feature engineering
-    df_feat = engineer_features(df_clean)
-
-    # Step 5: Encode + scale
+    df_raw    = load_raw_data()
+    report    = data_quality_report(df_raw)
+    df_clean  = clean_data(df_raw)
+    df_feat   = engineer_features(df_clean)
     X, feature_names, y, scaler, cat_encoder = encode_and_scale(df_feat, fit=True)
-
-    # Step 6: Split
     X_train, X_test, y_train, y_test = stratified_split(X, y)
+    save_processed_data(
+        X_train, X_test, y_train, y_test,
+        feature_names, scaler, cat_encoder, report
+    )
 
-    # Step 7: Save
-    save_processed_data(X_train, X_test, y_train, y_test, feature_names, scaler, cat_encoder, report)
-
-    print("\n[✓] Preprocessing pipeline complete.\n")
+    print("\n[OK] Preprocessing pipeline complete.\n")
     return X_train, X_test, y_train, y_test, feature_names
 
 

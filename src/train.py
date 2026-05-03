@@ -22,6 +22,7 @@ Outputs:
     outputs/metrics_summary.json
 """
 
+import sys
 import warnings
 import json
 import time
@@ -44,6 +45,8 @@ from sklearn.metrics import (
     roc_auc_score, average_precision_score, confusion_matrix,
     roc_curve, precision_recall_curve
 )
+
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 try:
     from xgboost import XGBClassifier
@@ -97,7 +100,7 @@ def load_processed_data() -> tuple:
     y_test = pd.read_csv(PROCESSED_DIR / "y_test.csv").values.ravel()
     feature_names = joblib.load(OUTPUTS_DIR / "feature_names.pkl")
 
-    print(f"[✓] Loaded processed data:")
+    print(f"[OK] Loaded processed data:")
     print(f"    X_train: {X_train.shape}  |  y_train churn rate: {y_train.mean():.2%}")
     print(f"    X_test:  {X_test.shape}  |  y_test  churn rate: {y_test.mean():.2%}")
     return X_train, X_test, y_train, y_test, feature_names
@@ -107,7 +110,7 @@ def load_processed_data() -> tuple:
 # Define Models
 # ─────────────────────────────────────────────────────────────
 def get_model_definitions() -> dict:
-    """Return a dict of model_name → model_instance."""
+    """Return a dict of model_name -> model_instance."""
     models = {
         "Logistic Regression": LogisticRegression(
             class_weight="balanced",
@@ -226,7 +229,7 @@ def train_all_models(
     print("=" * 60)
 
     for name, model in models.items():
-        print(f"\n[→] Training: {name} ...")
+        print(f"\n[->] Training: {name} ...")
         m = evaluate_model(model, X_train, X_test, y_train, y_test, name)
         results[name] = m
         trained_models[name] = model
@@ -252,7 +255,7 @@ def select_best_model(results: dict, trained_models: dict) -> tuple:
     best_name = max(results, key=lambda k: results[k]["roc_auc"])
     best_model = trained_models[best_name]
     best_auc = results[best_name]["roc_auc"]
-    print(f"\n[★] Best model: {best_name} (ROC-AUC = {best_auc:.4f})")
+    print(f"\n[*] Best model: {best_name} (ROC-AUC = {best_auc:.4f})")
     return best_name, best_model
 
 
@@ -266,7 +269,7 @@ def tune_best_model(
     Run RandomizedSearchCV on the best model.
     Optimizes for ROC-AUC with 5-fold stratified CV.
     """
-    print(f"\n[→] Hyperparameter tuning: {best_name} ...")
+    print(f"\n[->] Hyperparameter tuning: {best_name} ...")
 
     param_grids = {
         "XGBoost": {
@@ -332,8 +335,8 @@ def tune_best_model(
     )
     search.fit(X_train, y_train)
 
-    print(f"  [✓] Best CV ROC-AUC: {search.best_score_:.4f}")
-    print(f"  [✓] Best params: {search.best_params_}")
+    print(f"  [OK] Best CV ROC-AUC: {search.best_score_:.4f}")
+    print(f"  [OK] Best params: {search.best_params_}")
     return search.best_estimator_
 
 
@@ -361,7 +364,7 @@ def plot_roc_curves(results: dict, y_test: np.ndarray) -> None:
     path = FIGURES_DIR / "11_roc_curves.png"
     fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=PALETTE["bg"])
     plt.close()
-    print(f"  [✓] Saved: {path.name}")
+    print(f"  [OK] Saved: {path.name}")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -389,7 +392,7 @@ def plot_pr_curves(results: dict, y_test: np.ndarray) -> None:
     path = FIGURES_DIR / "12_pr_curves.png"
     fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=PALETTE["bg"])
     plt.close()
-    print(f"  [✓] Saved: {path.name}")
+    print(f"  [OK] Saved: {path.name}")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -421,7 +424,7 @@ def plot_metrics_comparison(metrics_list: list) -> None:
     path = FIGURES_DIR / "13_model_comparison.png"
     fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=PALETTE["bg"])
     plt.close()
-    print(f"  [✓] Saved: {path.name}")
+    print(f"  [OK] Saved: {path.name}")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -457,7 +460,7 @@ def save_artifacts(
             f, indent=2,
         )
 
-    print(f"\n[✓] Saved model.pkl, all_models.pkl, metrics_summary.json to outputs/")
+    print(f"\n[OK] Saved model.pkl, all_models.pkl, metrics_summary.json to outputs/")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -481,7 +484,7 @@ def main():
     tuned_model = tune_best_model(best_name, best_model, X_train, y_train)
 
     # Re-evaluate tuned model
-    print(f"\n[→] Evaluating tuned {best_name} ...")
+    print(f"\n[->] Evaluating tuned {best_name} ...")
     tuned_metrics = evaluate_model(tuned_model, X_train, X_test, y_train, y_test, f"{best_name} (Tuned)")
     print(
         f"    ROC-AUC: {tuned_metrics['roc_auc']:.4f} | "
@@ -490,7 +493,7 @@ def main():
     )
 
     # Generate plots
-    print("\n[→] Generating evaluation plots ...")
+    print("\n[->] Generating evaluation plots ...")
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     plot_roc_curves(results, y_test)
     plot_pr_curves(results, y_test)

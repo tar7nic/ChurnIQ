@@ -3,11 +3,11 @@ data_generator.py
 =================
 Generates a realistic synthetic telecom customer churn dataset with 6,000+ rows.
 Controlled correlations ensure the dataset is suitable for ML modeling:
-  - Month-to-month contracts → higher churn probability
-  - Low satisfaction scores → higher churn
-  - High support tickets → higher churn
-  - Long tenure → lower churn
-  - Electronic check payment → higher churn
+  - Month-to-month contracts -> higher churn probability
+  - Low satisfaction scores -> higher churn
+  - High support tickets -> higher churn
+  - Long tenure -> lower churn
+  - Electronic check payment -> higher churn
 
 Usage:
     python src/data_generator.py
@@ -125,7 +125,7 @@ def generate_churn_dataset(n: int = N_CUSTOMERS, seed: int = RANDOM_SEED) -> pd.
     monthly_charges = np.round(monthly_base + rng.normal(0, 5, size=n), 2)
     monthly_charges = np.clip(monthly_charges, 18, 120)
 
-    # Total charges = tenure × monthly (with some noise for plan changes)
+    # Total charges = tenure x monthly (with some noise for plan changes)
     total_charges = np.round(
         tenure * monthly_charges * rng.uniform(0.92, 1.08, size=n), 2
     )
@@ -143,7 +143,7 @@ def generate_churn_dataset(n: int = N_CUSTOMERS, seed: int = RANDOM_SEED) -> pd.
     )
     num_support_tickets = np.clip(ticket_base, 0, 12)
 
-    # Late payments: month-to-month + electronic check → more late payments
+    # Late payments: month-to-month + electronic check -> more late payments
     late_base = np.where(
         (contract == "Month-to-month") & (payment_method == "Electronic check"),
         rng.poisson(2.5, size=n),
@@ -164,8 +164,8 @@ def generate_churn_dataset(n: int = N_CUSTOMERS, seed: int = RANDOM_SEED) -> pd.
         -2.0                                                          # base intercept
         + 1.8 * (contract == "Month-to-month").astype(float)         # contract risk
         + 0.5 * (contract == "One year").astype(float)               # moderate risk
-        - 0.04 * tenure                                               # longer tenure → lower churn
-        + 0.015 * monthly_charges                                     # higher bills → more churn
+        - 0.04 * tenure                                               # longer tenure -> lower churn
+        + 0.015 * monthly_charges                                     # higher bills -> more churn
         + 0.25 * num_support_tickets                                  # ticket friction
         + 0.30 * late_payments                                        # payment risk
         - 0.60 * satisfaction_score                                   # dissatisfaction
