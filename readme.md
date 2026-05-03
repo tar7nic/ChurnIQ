@@ -15,9 +15,7 @@ An end-to-end machine learning system for predicting telecom customer churn — 
 
 ## 🖥 Live Demo
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://your-app-url.streamlit.app)
-
-> Replace the link above with your deployed Streamlit Cloud URL after deployment.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://churniq-tn-019.streamlit.app/)
 
 ---
 
