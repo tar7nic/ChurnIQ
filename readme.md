@@ -31,7 +31,6 @@ An end-to-end machine learning system for predicting telecom customer churn — 
 - [Quick Start](#quick-start)
 - [Run Order](#run-order)
 - [Tech Stack](#tech-stack)
-- [Resume Bullets](#resume-bullets)
 
 ---
 
