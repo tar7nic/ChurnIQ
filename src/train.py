@@ -154,6 +154,7 @@ def get_model_definitions() -> dict:
             max_depth=6,
             subsample=0.8,
             colsample_bytree=0.8,
+            scale_pos_weight=4,
             verbosity=0,
         )
     else:

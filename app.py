@@ -41,6 +41,13 @@ PROCESSED_DIR= PROJECT_ROOT / "data" / "processed"
 RAW_DIR      = PROJECT_ROOT / "data" / "raw"
 
 # ─────────────────────────────────────────────────────────────
+# Debug
+# ─────────────────────────────────────────────────────────────
+st.write("PROJECT_ROOT:", str(PROJECT_ROOT))
+st.write("metrics path:", str(OUTPUTS_DIR / "metrics_summary.json"))
+st.write("metrics exists:", (OUTPUTS_DIR / "metrics_summary.json").exists())
+
+# ─────────────────────────────────────────────────────────────
 # Design tokens
 # ─────────────────────────────────────────────────────────────
 BG       = "#0b0e1a"
@@ -1416,6 +1423,8 @@ def page_business_insights():
 # Main router
 # ═════════════════════════════════════════════════════════════
 def main():
+    st.cache_data.clear()
+    st.cache_resource.clear()
     page = render_sidebar()
 
     if page == "Dashboard":
