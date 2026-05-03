@@ -40,12 +40,12 @@ FIGURES_DIR  = OUTPUTS_DIR  / "figures"
 PROCESSED_DIR= PROJECT_ROOT / "data" / "processed"
 RAW_DIR      = PROJECT_ROOT / "data" / "raw"
 
-# ─────────────────────────────────────────────────────────────
-# Debug
-# ─────────────────────────────────────────────────────────────
-st.write("PROJECT_ROOT:", str(PROJECT_ROOT))
-st.write("metrics path:", str(OUTPUTS_DIR / "metrics_summary.json"))
-st.write("metrics exists:", (OUTPUTS_DIR / "metrics_summary.json").exists())
+# # ─────────────────────────────────────────────────────────────
+# # Debug
+# # ─────────────────────────────────────────────────────────────
+# st.write("PROJECT_ROOT:", str(PROJECT_ROOT))
+# st.write("metrics path:", str(OUTPUTS_DIR / "metrics_summary.json"))
+# st.write("metrics exists:", (OUTPUTS_DIR / "metrics_summary.json").exists())
 
 # ─────────────────────────────────────────────────────────────
 # Design tokens
