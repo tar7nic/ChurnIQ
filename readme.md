@@ -262,32 +262,6 @@ streamlit run app.py
 
 ---
 
-## Resume Bullets
-
-```
-• Built end-to-end ML pipeline for telecom customer churn prediction on 6,000 synthetic
-  records; Logistic Regression achieved ROC-AUC of 0.7842 and Recall of 0.7449, 
-  outperforming XGBoost on discrimination ability after rigorous feature engineering.
-
-• Engineered 5 business-driven features (tenure groups, payment risk score, engagement 
-  index, avg charge per tenure, high-value flag) improving model recall by ~8% vs baseline.
-
-• Compared 5 classifiers (Logistic Regression, Random Forest, XGBoost, SVM, Decision Tree) 
-  using stratified 5-fold cross-validation and class-imbalance handling 
-  (class_weight='balanced', scale_pos_weight).
-
-• Deployed interactive 5-page Streamlit dashboard with real-time churn scoring, risk tier 
-  classification (High/Medium/Low), SHAP-based churn driver explanation, and personalized 
-  retention action recommendations.
-
-• Performed SQL cohort churn analysis using SQLite; identified Month-to-month contract as 
-  top revenue risk segment, quantifying ~$220,800 annual revenue at risk.
-
-• Applied SHAP values for model explainability — surfaced top 10 churn drivers and 
-  translated findings into 6 actionable retention strategies with estimated business impact.
-```
-
----
 
 ## License
 
