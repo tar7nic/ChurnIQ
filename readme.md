@@ -246,7 +246,7 @@ streamlit run app.py
 ---
 
 ## Tech Stack
-```
+
 | Category | Tools |
 |---|---|
 | Language | Python 3.10+, R 4.2+ |
@@ -259,7 +259,6 @@ streamlit run app.py
 | Database | SQLite (via Python `sqlite3`) |
 | Serialization | Joblib |
 | Environment | Anaconda / virtualenv |
-```
 
 ---
 
