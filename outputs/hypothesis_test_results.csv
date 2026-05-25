@@ -1,0 +1,10 @@
+Variable,TestType,Statistic,P_value,Effect,Significant
+satisfaction_score,Wilcoxon,2008671,1.6407790993965781e-62,r=0.215,TRUE
+monthly_charges,Wilcoxon,3748687.5,1.8280994181566273e-55,r=0.203,TRUE
+tenure,Wilcoxon,2140746,1.7965747066976598e-45,r=0.183,TRUE
+num_support_tickets,Wilcoxon,3590144,1.0412850430154984e-38,r=0.168,TRUE
+total_charges,Wilcoxon,2621347.5,3.792931748978161e-5,r=0.053,TRUE
+ContractType,Chi-squared,353.481,4.997501249375312e-4,V=0.243,TRUE
+PaymentMethod,Chi-squared,126.318,4.997501249375312e-4,V=0.145,TRUE
+internet_service,Chi-squared,265.38,4.997501249375312e-4,V=0.21,TRUE
+tenure_group,Chi-squared,183.835,4.997501249375312e-4,V=0.175,TRUE

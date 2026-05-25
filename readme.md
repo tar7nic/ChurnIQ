@@ -246,21 +246,70 @@ streamlit run app.py
 ---
 
 ## Tech Stack
-
+```
 | Category | Tools |
 |---|---|
-| Language | Python 3.10+ |
+| Language | Python 3.10+, R 4.2+ |
 | Data | Pandas, NumPy |
 | ML | Scikit-Learn, XGBoost, imbalanced-learn |
-| Visualization | Matplotlib, Seaborn |
+| Visualization | Matplotlib, Seaborn, ggplot2, survminer |
+| Statistical Analysis | survival, coin, rstatix, ggpubr |
 | Explainability | SHAP |
 | Dashboard | Streamlit |
 | Database | SQLite (via Python `sqlite3`) |
 | Serialization | Joblib |
 | Environment | Anaconda / virtualenv |
+```
 
 ---
 
+## 📊 R Statistical Analysis
+
+Beyond the Python ML pipeline, two R scripts provide rigorous statistical validation of the churn drivers identified by the model.
+
+### Survival Analysis (`r/survival_analysis.R`)
+
+Treats churn as a time-to-event problem using classical survival analysis methods.
+
+| Method | Purpose |
+|---|---|
+| Kaplan-Meier Curves | Visualize retention probability over tenure by contract type & tenure group |
+| Log-Rank Test | Statistically compare survival distributions across contract groups |
+| Cox PH Model | Quantify hazard ratios for monthly charges, support tickets, satisfaction score, contract type, payment method |
+| Schoenfeld Residuals | Validate proportional hazards assumption |
+
+**Outputs:**
+
+| Plot | Insight |
+|---|---|
+| ![KM by Contract](outputs/figures/km_survival_contract.png) | Month-to-month customers drop off sharply — survival curve confirms Python model findings |
+| ![KM by Tenure Group](outputs/figures/km_survival_tenure_group.png) | 0–12 month cohort has lowest retention — year-one is the critical risk window |
+| ![Hazard Ratios](outputs/figures/cox_hazard_ratios.png) | Forest plot of Cox PH hazard ratios — features with HR > 1 directly increase churn risk |
+| ![Schoenfeld Residuals](outputs/figures/cox_ph_schoenfeld.png) | Residual plot validating Cox model assumptions |
+
+---
+
+### Hypothesis Testing (`r/hypothesis_testing.R`)
+
+Formally tests whether feature distributions differ significantly between churned and retained customers.
+
+| Test | Applied To | Purpose |
+|---|---|---|
+| Wilcoxon Rank-Sum | monthly_charges, total_charges, tenure, num_support_tickets, satisfaction_score | Non-parametric test — no normality assumption |
+| Chi-Squared + Cramér's V | contract, payment_method, internet_service, tenure_group | Tests independence between category and churn |
+| One-Way ANOVA + Tukey HSD | satisfaction_score across contract types | Pairwise mean comparison across 3 contract groups |
+
+**Outputs:**
+
+| Plot | Insight |
+|---|---|
+| ![Violin Plots](outputs/figures/hypothesis_violin_plots.png) | Distribution shape differences between churned vs retained across all numeric features |
+| ![Churn Rate by Category](outputs/figures/hypothesis_churn_rate_categorical.png) | Churn rate % per category — confirms contract type and payment method as top drivers |
+| ![ANOVA Satisfaction](outputs/figures/hypothesis_anova_satisfaction.png) | Satisfaction score varies significantly across contract types (p < 0.05) |
+
+> All test results with p-values, effect sizes, and significance flags saved to `outputs/hypothesis_test_results.csv`.
+
+---
 
 ## License
 
